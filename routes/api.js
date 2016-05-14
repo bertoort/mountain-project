@@ -27,9 +27,18 @@ router.get('/v/:name/:id', function(req, res, next) {
     name: req.params.name
   }
   phantom(info).then(result => {
+    $ = cheerio.load(result.content);
     var regexp = /(http:\/\/maps.google.com\/maps\?q=)(.*?)(?=&amp;t=h)/
     var location = result.content.match(regexp)
-    res.json({ data: location[2] });
+    var list = []
+    $('div.roundedTop a[target="_top"]').each(function (i, elem) {
+      list.push(elem.attribs.href)
+    })
+    var latLon = null;
+    if (location) {
+      latLon = location[2]
+    }
+    res.json({ location: latLon, links: list });
     result.sitepage.close();
     result.phInstance.exit();
   }).catch(error => {
